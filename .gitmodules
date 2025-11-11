@@ -1,0 +1,3 @@
+[submodule "PCGrid/third_party/libLAS"]
+	path = PCGrid/third_party/libLAS
+	url = https://github.com/libLAS/libLAS.git
