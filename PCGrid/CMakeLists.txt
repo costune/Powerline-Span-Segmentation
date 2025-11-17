@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(PCGrid VERSION 1.0.0 LANGUAGES CXX)
+project(PCGrid VERSION 0.0.0 LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 11)
@@ -30,7 +30,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libLAS/include
     ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIR}
-    /usr/include/python3.10
 )
 
 # Add libLAS as subdirectory
@@ -47,13 +46,8 @@ add_subdirectory(third_party/libLAS)
 set(SOURCES
     src/Las2PowerLine.cpp
     src/LasFileIo.cpp
-    # src/PowerLineFitting.cpp
-    # src/DBSCAN.cpp
     src/PCGrid.cpp
     src/PointCloutFeature.cpp
-    # src/catenaryRegression_ransac.cpp
-    # src/LinearRegression_rasac.cpp
-    # src/ParabolaRegression_ransac.cpp
 )
 
 # Collect all header files
@@ -61,10 +55,6 @@ set(HEADERS
     src/base.h
     src/DenseCluster.h
     src/LasFileIo.h
-    # src/PowerLineFitting.h
-    # src/catenaryRegression.h
-    # src/LinearRegression.h
-    # src/ParabolaRegression.h
     src/PointCloutFeature.h
     src/nanoflann/nanoflann.hpp
 )

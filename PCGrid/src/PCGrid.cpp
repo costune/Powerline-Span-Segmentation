@@ -376,13 +376,15 @@ struct ConnectTowerPair
 
 	void Init(const Eigen::Vector3f& p0, const Eigen::Vector3f& p1, int nSamples)
 	{
-		X0 = p0.x();	Y0 = p0.y();
+		X0 = p0.x();
+		Y0 = p0.y();
 		double dX = p1.x() - X0;
 		double dY = p1.y() - Y0;
 
 		double len = sqrt(dX * dX + dY * dY);
 
-		cosA = dX / len;	sinA = dY / len;
+		cosA = dX / len;
+		sinA = dY / len;
 	}
 
 	void Point2Line(float X, float Y, float* offset, float* dist)
@@ -452,12 +454,11 @@ void FindLongestConnection(std::vector<ConnectTowerPair>& connectMap, std::vecto
 {
 	int nTowers = towerCenters.size();
 	if (nTowers <= 0 || connectMap.empty()) {
-		fprintf(stderr, "No towers or connections to process.\n");
+		std::cerr << "No towers or connections to process." << std::endl;
 		return;
 	}
 
-	// ������ͼ���д�����ÿ����ֻ�������������������������ֻ����nInsideLineCells����2��
-	// 1. �ȶԳƸ���connectMap
+	// construct the symmetric connection map
 	for (int iTower = 0; iTower < nTowers; ++iTower)
 	{
 		for (int jTower = iTower + 1; jTower < nTowers; ++jTower)
@@ -469,101 +470,36 @@ void FindLongestConnection(std::vector<ConnectTowerPair>& connectMap, std::vecto
 		}
 	}
 
-	// 2.�����������ǵ�������
-	for (int iTower = 0; iTower < nTowers; ++iTower)
-	{
-		for (int jTower = iTower + 1; jTower < nTowers; ++jTower)
-		{
-			int cntIndex = iTower * nTowers + jTower;
-			int cntIndexSym = jTower * nTowers + iTower;
-
-			connectMap[cntIndex] = connectMap[cntIndexSym];
-		}
-	}
-
-	printf("Cnnection Map: initial\n");
+	std::cout << "Cnnection Map: initial" << std::endl;
 	PrintConnectionMap(connectMap, nTowers);
 
-/*
-	// 3.�д�����ֻ�������ŵ���������
-	for (int iTower = 0; iTower < nTowers; ++iTower)
-	{
-		std::multimap <int, int> towerConnections;
-		int cntIndex0 = iTower * nTowers;
-		for (int jTower = 0; jTower < nTowers; ++jTower)
-		{
-			if( iTower == jTower )
-				continue;
-			
-			int cntIndex = cntIndex0 + jTower;
-
-			if (connectMap[cntIndex].nInsideLineCells > 0)
-			{
-				towerConnections.insert(std::make_pair(connectMap[cntIndex].nInsideLineCells, jTower));
-			}
-		}
-
-		// ֻ�������ŵ���������
-		int k = 1;
-		int nTowerCnts = towerConnections.size();
-		for( auto & conn : towerConnections)
-		{
-			// ֻ��������2��
-			if ( k >= 2 )
-			{
-				int jTower = conn.second;
-				int cntIndex = cntIndex0 + jTower;
-
-				connectMap[cntIndex].nInsideLineCells = 0;
-				connectMap[cntIndex].nSamples = 0;
-			}
-
-			k++;
-		}
-	}
-*/
-
-	//printf("Cnnection Map: after filtering\n");
-	//PrintConnectionMap(connectMap, nTowers);
-
-	// 4. find the longest connection path
+	// find the longest connection path
 	std::multimap<int, std::vector<int> > mPaths;
-	for (int iTower = 0; iTower < nTowers; ++iTower)
+	for (int startTower = 0; startTower < nTowers; ++startTower)
 	{
-		std::vector<int> towers;
-		towers.push_back(iTower);
-
-		int iTowerTrace = iTower;
-
-trace_next_tower:
-		for (int jTower = iTowerTrace + 1; jTower < nTowers; ++jTower)
+		for (int nextTower = startTower + 1; nextTower < nTowers; ++nextTower)
 		{
-			int cntIndex = iTowerTrace * nTowers + jTower;
-			if( connectMap[cntIndex].nInsideLineCells > 0 )
+			std::vector<int> towers;
+			towers.push_back(startTower);
+
+			int traceTower = startTower;
+			int candidateTower = nextTower;
+
+			while (candidateTower < nTowers)
 			{
-				towers.push_back(jTower);
-				iTowerTrace = jTower;	// continue to trace the next tower		
-				int cntIndexSym = jTower * nTowers + iTowerTrace;
-
-				connectMap[cntIndex].nInsideLineCells = 0;	// mark as visited
-				connectMap[cntIndexSym].nInsideLineCells = 0;	// mark as visited
-
-				goto trace_next_tower;
+				int cntIndex = traceTower * nTowers + candidateTower;
+				if ( connectMap[cntIndex].nInsideLineCells > 0 )
+				{
+					towers.push_back(candidateTower);
+					traceTower = candidateTower;
+				}
+				candidateTower++;
 			}
-		}
 
-		if (towers.size() > 1)
-		{	
-			mPaths.insert(std::make_pair(towers.size(), towers));
-
-			if (towers.size() > nTowers/2 )
-			{
-				fprintf(stderr, "reach the maximum towers\n");
-				break;	//
-			}
-		}
+			if (towers.size() > 1) mPaths.insert(std::make_pair(towers.size(), towers));
+		}		
 	}
-
+	
 	std::vector<int> &longestPath = mPaths.rbegin()->second;
 	std::vector<clusterCENTER> tempTowerCenter;
 
@@ -588,9 +524,9 @@ trace_next_tower:
 //  (3) the tower is outside the power line corridor, the power tower are at one side of power line points
 // 
 // 4.For each pair of towers, check their connection is consistent with power line points and update the grid cells id with nearest power connection
-//  (1) ����һ���ԣ���������֮��������߲�����������ߵ㣬��������ߵķ���Ȼ���������������ߵķ���һ����?
-//  (2) ����������������߷���һ�µ�����£��ҵ����߳����е���ͷ�ߵ�ϵͳ���ɣ� һ���Խֱ���������ӣ����Ȼ�ԶԶ���������ĸ�������? 
-//  (3) ��ٸ������ӵĳ���һ���?���������ӳ��ܶ�
+//  (1) indexing the line pcgrid point near the mid-line of the tower pair
+//  (2) compute the distance and offset from the grid cell to the connection line
+//  (3) check the inlier rate to determine if the tower pair is connected
 //
 void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gridSize, std::vector<clusterCENTER>& towerCenters, const std::string& outDir )
 {
@@ -613,7 +549,9 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 	double maxZ = std::numeric_limits<double>::lowest();
 
 	{
-		double sumZ = 0, sumZ2 = 0;
+		int n = lineLasPoints.size();
+		double avZ = 0;
+		double sumZ2 = 0;
 		for (const auto& point : lineLasPoints) {
 			minX = std::min(minX, (double)point.pt.x());
 			minY = std::min(minY, (double)point.pt.y());
@@ -623,14 +561,10 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 			maxY = std::max(maxY, (double)point.pt.y());
 			maxZ = std::max(maxZ, (double)point.pt.z());
 
-			// FIXME: may overflow
-			sumZ += point.pt.z();
-			sumZ2 += (double)point.pt.z() * point.pt.z();
+			avZ += (double)point.pt.z() / n;
+			sumZ2 += (double)point.pt.z() * point.pt.z() / n;
 		}
-
-		int n = lineLasPoints.size();
-		double avZ = sumZ / n ;
-		double stdZ = sqrt(sumZ2 / n - avZ * avZ);
+		double stdZ = sqrt(sumZ2 - avZ * avZ);
 
 		// 	prevent outlers
 		if (minZ < avZ - 3.5 * stdZ)
@@ -655,7 +589,7 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 
 	if (nCells < towerCenters.size())
 	{
-		fprintf(stderr, "Not enough grid cells to process.\n");
+		std::cerr << "Not enough grid cells to process." << std::endl;
 		return;
 	}
 
@@ -688,7 +622,6 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 	//  (2) the tower is in the middle of a power line points, but the power line points are not connected to the tower
 	//  (3) the tower is outside the power line corridor, the power tower are at one side of power line points
 	{
-		// 3.1 �������ĵ��������?�������һ����ľ����С��������?
 		SortTowerCentersWithDistance(towerCenters, lineLasPoints[0].pt);
 		std::cout << "  " << towerCenters.size() << " towers are sorted based on tower distance" << std::endl;
 		PrintTowerList(towerCenters);
@@ -727,8 +660,8 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 				cPointIndices[i] = i;
 			}
 
+			// if there are nearby line grid cells
 			if (nMatches >= 1 ) {
-				// ��Ҫ��������
 				if (iTower > 0 && iTower < towerCenters.size() - 1) {
 					Eigen::Vector3f center;
 					double eigenValue[2], axis[2];
@@ -743,7 +676,7 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 						double dY = xyz[1] - center.y();
 
 						float offset = axis[0] * dX + axis[1] * dY; // offset to the main axis
-						float dist = -axis[1] * dX + axis[0] * dX; // distance to the main axis
+						float dist = -axis[1] * dX + axis[0] * dY;  // distance to the main axis
 
 						if (fabs(dist) < axesLen[1])
 						{
@@ -751,8 +684,9 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 						}
 					}
 				}
-				else
-				{
+
+				// the first and late tower will be kept
+				else {
 					towerCentersInsideCorridor.push_back(towerCenters[iTower]);
 				}
 			}
@@ -775,7 +709,7 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 	float cntLenTh = 3 * EstimateMaxConnectionLength(towerCenters);
 
 	// We don't need sorted results for radius search
-	nanoflann::SearchParameters params(0, false);
+	// nanoflann::SearchParameters params(0, false);
 	uint32_t ret_matches[1];
 	float  ret_dist2[1];
 
@@ -794,7 +728,7 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 			double dX = (towerCenters[jTower].pt.x() - towerCenters[iTower].pt.x());
 			double dY = (towerCenters[jTower].pt.y() - towerCenters[iTower].pt.y());
 
-			float  Z0Max = towerCenters[iTower].getMaxZ() + 3;		// ���ٲ�ȷ����
+			float  Z0Max = towerCenters[iTower].getMaxZ() + 3;		// add 3 meters tolerance
 			double dZ = towerCenters[jTower].getMaxZ() - Z0Max;
 
 			double len = sqrt(dX * dX + dY * dY);
@@ -803,8 +737,7 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 
 			int nSamples = len / gridSize;
 
-			if (nSamples < 5)
-				nSamples = 5; // at least 5 samples
+			nSamples = std::max(nSamples, 5);
 
 			connectMap[cntIndex].Init(towerCenters[iTower].pt, towerCenters[jTower].pt, nSamples);
 
@@ -818,80 +751,64 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 			double dRadius = (radius_j - radius_i) / nSamples;
 			double dOffset = sqrt(dX * dX + dY * dY);
 
-			// ��������?��ľ���С������һ�������뾶��?2��������2���������������ӣ���������һ������������
+			// continue if the two towers are too close
 			if (len < 2 * radius_i || len < 2 * radius_j) {
 				continue;
 			}
 
-			// ��������¼�������������ĵ����߸����㣬��ͳ����������������߸��Ƿ�Χ�ĸ�����?
-			std::vector<float> insideCellElevations;
+			std::vector<float> insideCellElevations;  // line grid cell height 
 			insideCellElevations.reserve(nSamples - 2);
 			{
 				float xyz[3];
 
 				for (int k = 1; k < nSamples - 1; ++k)
 				{
-					xyz[0] = towerCenters[iTower].pt.x() + k*dX;
+					xyz[0] = towerCenters[iTower].pt.x() + k * dX;
 					xyz[1] = towerCenters[iTower].pt.y() + k * dY;
 					xyz[2] = 0;	// Z0Max + k * dZ;
 
-					float offset_cnt = k*dOffset;
+					float offset_cnt = k * dOffset;
 					float radius = radius_i + k * dRadius;
 
-					// �˾������޷��ŵģ�����
+					// seaech for line cell
 					kdIndex.knnSearch(xyz, 1, ret_matches, ret_dist2);
 
 					int cellId = vCellIds[ret_matches[0]];
 					GridCell* cell = grid.getCell(cellId);
 
-					// �������ĵ������ڸ��������Ϸ������Ǳ����ӵĵ�����
+					// line is under the max height of the towers
 					if( (Z0Max + k * dZ) < cell->Zw )
 						continue;
 
-					// ��cell����ͶӰ������������ˮƽ��
+					// get the offset and distance to the connection line with respect to tower i
 					float dx_cell, dy_cell;
 					connectMap[cntIndex].Point2Line(cell->Xw, cell->Yw, &dx_cell, &dy_cell);
 
-					// ����ڸ��������ϵĸ��Ƿ�Χ��?
+					// in the radius
 					if ( fabs(dy_cell) < radius) 
 					{
-						// ����ڲ��?����?��
 						dx_cell -= offset_cnt;
-
-						// �����������߽��ƴ�ֱ�ڸ������ߣ�����Ϊ����Ч��
+						// within the nearby offset
 						if ( fabs(dx_cell) < 2*gridSize )
 						{
 							insideCellElevations.push_back( cell->maxZ );
 						}
 					}
-				};
+				}
 			}
 
 			int nInsideCells = insideCellElevations.size();
 			float insideRate = (float)nInsideCells / (nSamples - 2);
 
-			// �����������Ǽǵ�cell
+			// require more than 90% of the sampled cells are inside the line corridor
 			if (insideRate > 0.9 ) 
-			{	 
-				if (false) {
-					// �������?�Ƿ����������ģ�ͣ���ͷ�ĵ�����м�ĵ�?
-					float zMin = std::numeric_limits<float>::max();
-					for (float z : insideCellElevations)
-						if (z < zMin)
-							zMin = z;
-
-					// ���������������?
-					if (zMin > towerCenters[iTower].getMaxZ() || zMin > towerCenters[jTower].getMaxZ())
-						continue;
-				}
-
+			{
 				connectMap[cntIndex].nInsideLineCells = nInsideCells;
 				connectMap[cntIndex].nSamples = nSamples;
 			}
 		}
 	}
 
-	// ������ͼ��Ѱ���������
 	FindLongestConnection(connectMap, towerCenters);
 
 }

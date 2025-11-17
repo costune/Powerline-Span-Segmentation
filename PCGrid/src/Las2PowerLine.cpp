@@ -12,6 +12,7 @@
 #include "base.h"
 #include "LasFileIo.h"
 #include "DenseCluster.h"
+#include "Las2PowerLine.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -24,14 +25,14 @@
 
 bool createDirectory(const std::string& path) {
 #ifdef WIN32
-    // Windows 下
+    // Windows
     if (CreateDirectory(path.c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS) {
         return true;
     } else {
         return false;
     }
 #else
-    // Linux / macOS 下
+    // Linux / macOS
     if (mkdir(path.c_str(), 0777) == 0 || errno == EEXIST) {
         return true;
     } else {
@@ -236,11 +237,6 @@ void SortTowerCentersWithDistance(std::vector<clusterCENTER>& towerCenters, Eige
 		minDist = calculateDistanceSquare_2D(curCenter, towerCenters[jMin].pt);
 	}
 
-	// std::cout << "  " << towerCenters.size() << " towers are sorted with start point" << std::endl;
-	// PrintTowerList(towerCenters);
-
-	// 和第一点比较，是否第一个的距离更短？
-
 	std::vector<clusterCENTER> sortedTowerCenters;
 
 	int iNeedResort = -1;
@@ -254,10 +250,10 @@ void SortTowerCentersWithDistance(std::vector<clusterCENTER>& towerCenters, Eige
 		{
 			sortedTowerCenters.resize(nTowers);
 
-			int nTail = i - 1;
+			// 将i前面的点反转
 			for (int j = 0; j < i; ++j)
 			{
-				sortedTowerCenters[j] = towerCenters[nTail - j];
+				sortedTowerCenters[j] = towerCenters[i-1 - j];
 			}
 
 			// 将剩余的点复制到后面
@@ -374,21 +370,14 @@ int GroupPowerLinePoints(const std::vector<cLasPOINT>& lineLasPoints,
 		float offsetX, dist;
 		if ( lineSegs[indexTower].IsPointInSeg(pt, &offsetX, &dist)) 
 		{
-			if (34 == indexTower) {
-				printf("");
-			}
 
 			float r0 = towerCenters[indexTower].get2DRadius();
 			float r1 = towerCenters[indexTower+1].get2DRadius();
 
 			float r = r0 + (r1 - r0) * offsetX / lineSegs[indexTower].len + 1;
 
-			if (fabs(dist) < r)		// 在连线的3倍半径范围内
+			if (fabs(dist) < r)
 				groupedLinePts[indexTower].push_back(i);
-			else
-			{
-				printf("");
-			}
 		}
 		else if (indexTower > 0 && lineSegs[indexTower - 1].IsPointInSeg(pt, &offsetX, &dist))
 		{
@@ -397,12 +386,8 @@ int GroupPowerLinePoints(const std::vector<cLasPOINT>& lineLasPoints,
 
 			float r = r0 + (r1 - r0) * offsetX / lineSegs[indexTower-1].len + 1;
 
-			if (fabs(dist) < r)		// 在连线的3倍半径范围内
+			if (fabs(dist) < r)
 				groupedLinePts[indexTower-1].push_back(i);
-			else
-			{
-				printf("");
-			}
 		}
 		else if (indexTower < nTowers - 2 && lineSegs[indexTower + 1].IsPointInSeg(pt, &offsetX, &dist))
 		{
@@ -411,12 +396,8 @@ int GroupPowerLinePoints(const std::vector<cLasPOINT>& lineLasPoints,
 
 			float r = r0 + (r1 - r0) * offsetX / lineSegs[indexTower + 1].len + 1;
 
-			if (fabs(dist) < r)		// 在连线的3倍半径范围内
+			if (fabs(dist) < r)
 				groupedLinePts[indexTower+1].push_back(i);
-			else
-			{
-				printf("");
-			}
 		}
 	}
 
@@ -437,22 +418,27 @@ int main(int *argc, char **argv)
 
 	{
 
-		// create output Dir
+		// Create output Dir
 		if (createDirectory(outDir)) {
 			std::cout << "Directory " + outDir + " is created successfully." << std::endl;
 		} else {
-			std::cout << "Fail to create " + outDir << std::endl;
+			std::cerr << "Fail to create " + outDir << std::endl;
 		}
 
 
-		// record the start time
 		auto startTime = std::chrono::high_resolution_clock::now();
 
-		// read line and tower pointclouds
+		// Read line and tower pointclouds
 		std::vector<cLasPOINT> lineLasPoints;
 		std::vector<cLasPOINT> towerLasPoints;
 
-		int nLineLasPoints0 = ReadLasFile(lineLasFile, lineLasPoints);
+		int nLineLasPoints0 = 0;
+		try {
+			nLineLasPoints0 = ReadLasFile(lineLasFile, lineLasPoints);
+		} catch (const std::exception& e) {
+			std::cerr << "Error reading line LAS file: " << e.what() << std::endl;
+			return -1;
+		}
 		int nLineLasPoints1 = EraseRepeatedPoints(lineLasPoints);
 		std::cout << "  "
 			<< nLineLasPoints1
@@ -462,7 +448,13 @@ int main(int *argc, char **argv)
 			<< "% points are erased"
 			<< std::endl;
 
-		int nTowerLasPoints0 = ReadLasFile(towerLasFile, towerLasPoints);
+		int nTowerLasPoints0 = 0;
+		try {
+			nTowerLasPoints0 = ReadLasFile(towerLasFile, towerLasPoints);
+		} catch (const std::exception& e) {
+			std::cerr << "Error reading tower LAS file: " << e.what() << std::endl;
+			return -1;
+		}
 		int nTowerLasPoints1 = EraseRepeatedPoints(towerLasPoints);
 		std::cout << "  "
 			<< nTowerLasPoints1
@@ -472,13 +464,9 @@ int main(int *argc, char **argv)
 			<< "% points are erased"
 			<< std::endl;
 
-		// Record pointclouds reading end time
 		auto endTime_reading = std::chrono::high_resolution_clock::now();
-
 		{
-			// Calculate the reading duration
 			auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(endTime_reading - startTime);
-
 			std::cout << "Time taken to read las point: "
 				<< std::fixed << std::setprecision(2)
 				<< duration.count()
@@ -520,7 +508,7 @@ int main(int *argc, char **argv)
 
 			// 1.3 The towers are paired and verified using power lines to check if there are sufficient power line points between them.
 			CheckTowersWithLinePoints(mainLineLasPoints, 1.0, towerCenters, outDir);
-			fprintf(stderr, "%d towers passed checking\n", (int)towerCenters.size());
+			std::cout << towerCenters.size() << " towers passed checking" << std::endl;
 			PrintTowerList(towerCenters);
 
 			if (g_bSaveFile) {
@@ -528,8 +516,8 @@ int main(int *argc, char **argv)
 				SaveCenters2LasFile(CheckedTowerCenterFile, towerCenters);
 			}
 
-			// 2.按照杆塔连接进行电力线精细分段
-			// 2.1 根据杆塔中心初始化分段基准
+			// 2. Power line segmentation between towers
+			// 2.1 Init span according to tower centers
 			std::vector<lineSEG> lineSegs;
 			InitLineSegs(towerCenters, lineSegs);
 
@@ -538,7 +526,6 @@ int main(int *argc, char **argv)
 			// 2.2 根据点杆塔连线的垂直距离，对电力线进行分档
 			int nGroups = GroupPowerLinePoints(mainLineLasPoints, towerCenters, lineSegs, vvSegLinePtIndices);
 			
-			// 保存 初始电力线分档 用于可视化
 			if( g_bSaveFile )
 				SaveGroupPoints2LasFile(outDir, mainLineLasPoints, vvSegLinePtIndices);
 

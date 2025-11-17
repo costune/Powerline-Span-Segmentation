@@ -3,6 +3,7 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <stdexcept>
 #include <Eigen/Dense>
 #include <liblas/liblas.hpp>
 #include "base.h"
@@ -18,14 +19,12 @@ static double lasCoordScales[3];
 int ReadLasFile(const std::string& lasFile, std::vector<cLasPOINT>& lasPoints)
 {
     if (lasFile.empty()) {
-        std::cout << "Invalid LAS file path: " << lasFile << std::endl;
-        return -1;
+        throw std::invalid_argument("Invalid LAS file path: " + lasFile);
     }
 
     std::ifstream ifs(lasFile, std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
-        std::cerr << "Failed to open LAS file: " << lasFile << std::endl;
-        return -1;
+        throw std::runtime_error("Failed to open LAS file: " + lasFile);
     }
 
     liblas::ReaderFactory f;
@@ -108,7 +107,7 @@ int EraseRepeatedPoints(std::vector<cLasPOINT>& lasPoints)
 
 	lasPoints.erase(last, lasPoints.end());
 
-	return lasPoints.size();
+	return static_cast<int>(lasPoints.size());
 }
 
 
@@ -124,12 +123,7 @@ void SavePoints2LasFile(const std::string& lasFile, const std::vector<cLasPOINT>
 
 void SavePoints2LasFile(const std::string& lasFile, const std::vector<Eigen::Vector3f>& lasPoints)
 {
-    std::vector<Eigen::Vector3f> pts;
-    pts.reserve(lasPoints.size());
-    for (const auto& p : lasPoints)
-        pts.emplace_back(p.x(), p.y(), p.z());
-
-    WriteLasFile(lasFile, pts);
+    WriteLasFile(lasFile, lasPoints);
 }
 
 void SaveCenters2LasFile(const std::string& lasFile, const std::vector<clusterCENTER>& lasPoints)
@@ -151,9 +145,6 @@ void SaveGroupPoints2LasFile(const std::string& outDir,
         return;
     }
 
-    // Note: std::filesystem requires C++17. Directory must exist.
-    // std::filesystem::create_directories(outDir);
-
     for (size_t i = 0; i < groupedLinePts.size(); ++i)
     {
         std::string groupFileName = outDir + "/group_" + std::to_string(i) + ".las";
@@ -164,6 +155,11 @@ void SaveGroupPoints2LasFile(const std::string& outDir,
         for (int idx : groupedLinePts[i]) {
             if (idx >= 0 && idx < (int)lineLasPoints.size())
                 pts.push_back(lineLasPoints[idx].pt);
+        }
+
+        if (pts.empty()) {
+            std::cout << "No points in group " << i << ", skipping file: " << groupFileName << std::endl;
+            continue;
         }
 
         WriteLasFile(groupFileName, pts);
