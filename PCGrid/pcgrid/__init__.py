@@ -1,9 +1,7 @@
 import os
-import glob
 import numpy as np
 import laspy
 from typing import Tuple, List
-from natsort import natsorted
 
 from pcgrid._C import process_points
 
@@ -40,10 +38,14 @@ class SpanSegment:
         if line_pcd.shape[0] < 100 or tower_pcd.shape[0] < 100:
             raise RuntimeError("Not enough points")
         
-        span_pcd_result = process_points(line_pcd, tower_pcd)
+        try:
+            span_pcd_result = process_points(line_pcd, tower_pcd)
+        except Exception as e:
+            raise RuntimeError("process_points failed") from e
         
         if span_pcd_result is None:
-            ...
+            raise RuntimeError("No result from process_points")
+        
         span_pcds = []
         for pcd in span_pcd_result:
             if pcd.shape[0] <= 0:

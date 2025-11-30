@@ -490,7 +490,7 @@ void FindLongestConnection(std::vector<ConnectTowerPair>& connectMap, std::vecto
 //  (2) compute the distance and offset from the grid cell to the connection line
 //  (3) check the inlier rate to determine if the tower pair is connected
 //
-void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gridSize, std::vector<clusterCENTER>& towerCenters, const std::string& outDir, const bool debug )
+void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gridSize, std::vector<clusterCENTER>& towerCenters, const std::string& outDir)
 {
 	std::cout << "Checking towers with line points..." << std::endl;
 	
@@ -659,10 +659,8 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 		towerCenters = std::move(towerCentersInsideCorridor);
 		PrintTowerList(towerCenters);
 
-		// if ( debug ) {
-		// 	std::string lasCenterInsideFile = outDir + "/InsideTowerCenters.las";
-		// 	SaveCenters2LasFile(lasCenterInsideFile.c_str(), towerCenters);
-		// }
+		std::string lasCenterInsideFile = outDir + "/InsideTowerCenters.las";
+		SaveCenters2LasFile(lasCenterInsideFile.c_str(), towerCenters);
 	}
 
 

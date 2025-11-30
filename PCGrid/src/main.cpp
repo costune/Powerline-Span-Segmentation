@@ -154,7 +154,7 @@ int main(int argc, char **argv){
 			}
 
 			// 1.3 The towers are paired and verified using power lines to check if there are sufficient power line points between them.
-			CheckTowersWithLinePoints(mainLineLasPoints, 1.0, towerCenters, outDir, debug);
+			CheckTowersWithLinePoints(mainLineLasPoints, 1.0, towerCenters, outDir);
 			std::cout << towerCenters.size() << " towers passed checking" << std::endl;
 			PrintTowerList(towerCenters);
 

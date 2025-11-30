@@ -140,7 +140,7 @@ py::list process_points(py::array_t<float> lineLasPoints_numpy, py::array_t<floa
     }
 
     // 1.3 The towers are paired and verified using power lines to check if there are sufficient power line points between them.
-    CheckTowersWithLinePoints(mainLineLasPoints, 1.0, towerCenters, "", false);
+    CheckTowersWithLinePoints(mainLineLasPoints, 1.0, towerCenters, "");
     std::cout << towerCenters.size() << " towers passed checking" << std::endl;
     PrintTowerList(towerCenters);
 
