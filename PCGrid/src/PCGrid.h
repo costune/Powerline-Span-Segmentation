@@ -1,5 +1,5 @@
-﻿#ifndef _DENSE_CLUSTER_H_
-#define _DENSE_CLUSTER_H_
+﻿#ifndef PCGRID_H
+#define PCGRID_H
 
 #include <iostream>
 #include <vector>
@@ -759,7 +759,7 @@ int PCGrid_2D(std::vector<cLasPOINT>& cPoints, double eps, std::vector<clusterCE
 int PCGrid_3D(std::vector<cLasPOINT>& cPoints, double eps, std::vector<clusterCENTER>& dbScanCenters, std::vector<std::vector<int> >& vvClusterPoints);
 
 void FilterLinePointsWithPCGrid(std::vector<cLasPOINT>& lineLasPoints, double eps, int minPts, std::vector<clusterCENTER>& clusterCenters, std::vector<cLasPOINT>& mainLinePoints);
-void CheckTowersWithLinePoints(std::vector<cLasPOINT>& lineLasPoints, float gridSize, std::vector<clusterCENTER>& towerCenters, const std::string& outDir);
+void CheckTowersWithLinePoints(std::vector<cLasPOINT>& lineLasPoints, float gridSize, std::vector<clusterCENTER>& towerCenters, const std::string& outDir, const bool debug);
 
 
 #endif // _DENSE_CLUSTER_H_

@@ -10,8 +10,16 @@
 #include <iomanip>
 
 #include "base.h"
-#include "LasFileIo.h"
-#include "DenseCluster.h"
+#include "PCGrid.h"
 
 
-void process_points(const std::string& lineLasFile, const std::string& towerLasFile, const std::string& outDir);
+void PrintTowerList(const std::vector<clusterCENTER>& towerCenters);
+
+int GetTowerCenter(std::vector<cLasPOINT>& towerPoints, float minHei, std::vector<clusterCENTER>& towerCenters, const bool debug);
+
+void SortTowerCentersWithDistance(std::vector<clusterCENTER>& towerCenters, Eigen::Vector3f curCenter);
+
+void InitLineSegs(const std::vector<clusterCENTER>& towerCenters, std::vector<lineSEG>& lineSegs);
+
+int GroupPowerLinePoints(const std::vector<cLasPOINT>& lineLasPoints, const std::vector<clusterCENTER>& towerCenters, const std::vector<lineSEG> &lineSegs, std::vector<std::vector<int> >& groupedLinePts);
+

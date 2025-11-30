@@ -8,10 +8,8 @@
 #include <iostream>
 
 #include "LasFileIo.h"
-#include "DenseCluster.h"
+#include "PCGrid.h"
 #include "PointCloutFeature.h"
-
-extern bool g_bSaveFile;
 
 void PrintTowerList(const std::vector<clusterCENTER>& towerCenters);
 
@@ -364,39 +362,6 @@ int PCGrid_2D(std::vector<cLasPOINT>& cPoints, double eps, std::vector<clusterCE
 }
 
 
-struct ConnectTowerPair
-{
-	int	  nInsideLineCells;		// 
-	int	  nSamples;				// number of samples in the connection, related to the distance between two towers
-
-	float X0, Y0;				// start point
-	float cosA, sinA;			// direction 
-
-	ConnectTowerPair() : nInsideLineCells(0), nSamples(0), X0(0), Y0(0), cosA(0), sinA(0) {};
-
-	void Init(const Eigen::Vector3f& p0, const Eigen::Vector3f& p1, int nSamples)
-	{
-		X0 = p0.x();
-		Y0 = p0.y();
-		double dX = p1.x() - X0;
-		double dY = p1.y() - Y0;
-
-		double len = sqrt(dX * dX + dY * dY);
-
-		cosA = dX / len;
-		sinA = dY / len;
-	}
-
-	void Point2Line(float X, float Y, float* offset, float* dist)
-	{
-		double dX = X - X0;
-		double dY = Y - Y0;
-
-		*offset =  cosA * dX + sinA * dY;
-		*dist   = -sinA * dX + cosA * dY;
-	}
-};
-
 
 
 float EstimateMaxConnectionLength (std::vector<clusterCENTER>& towerCenters )
@@ -423,30 +388,27 @@ float EstimateMaxConnectionLength (std::vector<clusterCENTER>& towerCenters )
 	return 5*stdLen;
 }
 
-extern bool g_bPrintDetails;
 void PrintConnectionMap(const std::vector<ConnectTowerPair>& connectMap, int nTowers)
 {
-	if (g_bPrintDetails) {
-		auto iter = connectMap.begin();
-		for (int iTower = 0; iTower < nTowers; ++iTower)
+	auto iter = connectMap.begin();
+	for (int iTower = 0; iTower < nTowers; ++iTower)
+	{
+		printf("line %3d: ", iTower);
+		for (int jTower = 0; jTower < nTowers; ++jTower)
 		{
-			printf("line %3d: ", iTower);
-			for (int jTower = 0; jTower < nTowers; ++jTower)
-			{
-				if (iTower == jTower)
-					printf("*");
-				else {
-					if( iter->nInsideLineCells > 0 )
-						printf("8", iter->nInsideLineCells);
-					else
-						printf(" ");
+			if (iTower == jTower)
+				printf("*");
+			else {
+				if( iter->nInsideLineCells > 0 )
+					printf("8", iter->nInsideLineCells);
+				else
+					printf(" ");
 
-					//printf("%2d ", 100 * iter->nInsideLineCells / (iter->nSamples - 2));
-				}
-				iter++;
+				//printf("%2d ", 100 * iter->nInsideLineCells / (iter->nSamples - 2));
 			}
-			printf("\n");
+			iter++;
 		}
+		printf("\n");
 	}
 }
 
@@ -471,7 +433,7 @@ void FindLongestConnection(std::vector<ConnectTowerPair>& connectMap, std::vecto
 	}
 
 	std::cout << "Cnnection Map: initial" << std::endl;
-	PrintConnectionMap(connectMap, nTowers);
+	// PrintConnectionMap(connectMap, nTowers);
 
 	// find the longest connection path
 	std::multimap<int, std::vector<int> > mPaths;
@@ -528,7 +490,7 @@ void FindLongestConnection(std::vector<ConnectTowerPair>& connectMap, std::vecto
 //  (2) compute the distance and offset from the grid cell to the connection line
 //  (3) check the inlier rate to determine if the tower pair is connected
 //
-void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gridSize, std::vector<clusterCENTER>& towerCenters, const std::string& outDir )
+void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gridSize, std::vector<clusterCENTER>& towerCenters, const std::string& outDir, const bool debug )
 {
 	std::cout << "Checking towers with line points..." << std::endl;
 	
@@ -697,10 +659,10 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 		towerCenters = std::move(towerCentersInsideCorridor);
 		PrintTowerList(towerCenters);
 
-		if ( g_bSaveFile ) {
-			std::string lasCenterInsideFile = outDir + "/InsideTowerCenters.las";
-			SaveCenters2LasFile(lasCenterInsideFile.c_str(), towerCenters);
-		}
+		// if ( debug ) {
+		// 	std::string lasCenterInsideFile = outDir + "/InsideTowerCenters.las";
+		// 	SaveCenters2LasFile(lasCenterInsideFile.c_str(), towerCenters);
+		// }
 	}
 
 

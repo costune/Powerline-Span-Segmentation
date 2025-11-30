@@ -48,19 +48,28 @@ set(SOURCES
     src/LasFileIo.cpp
     src/PCGrid.cpp
     src/PointCloutFeature.cpp
+    src/PowerLineProcessor.cpp
 )
 
 # Collect all header files
 set(HEADERS
     src/base.h
-    src/DenseCluster.h
+    src/PCGrid.h
     src/LasFileIo.h
     src/PointCloutFeature.h
-    src/nanoflann/nanoflann.hpp
+    src/nanoflann.hpp
+    src/ProcessorConfig.h
+    src/PowerLineProcessor.h
 )
 
 # Create executable
 add_executable(Las2PowerLine ${SOURCES} ${HEADERS})
+
+# Define debug/release macros for the target.
+# - For single-config generators (Makefile/Ninja) CMAKE_BUILD_TYPE is honoured.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(Las2PowerLine PRIVATE MYPROJECT_DEBUG)
+endif()
 
 # Link libraries
 target_link_libraries(Las2PowerLine PRIVATE las)

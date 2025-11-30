@@ -1,7 +1,5 @@
-﻿#include "PointCloutFeature.h"
-
-#include <set>
-#include <complex>
+﻿#include "base.h"
+#include "PointCloutFeature.h"
 
 
 void computeCenter_Std(const std::vector<cLasPOINT>& cPoints, const std::vector<int>& clusterPointIndices, Eigen::Vector3f& center, Eigen::Vector3f& std)

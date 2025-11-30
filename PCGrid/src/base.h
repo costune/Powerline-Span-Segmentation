@@ -1,13 +1,14 @@
 #ifndef BASE_H
 #define BASE_H
 
-#include <cstdlib>
 #include <cmath>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <limits>
 #include <cstdint>
+#include <set>
+#include <map>
 #include <Eigen/Dense>
 
 
@@ -155,6 +156,39 @@ public:
 			return true;
 		
 		return false;
+	}
+};
+
+struct ConnectTowerPair
+{
+	int	  nInsideLineCells;		// 
+	int	  nSamples;				// number of samples in the connection, related to the distance between two towers
+
+	float X0, Y0;				// start point
+	float cosA, sinA;			// direction 
+
+	ConnectTowerPair() : nInsideLineCells(0), nSamples(0), X0(0), Y0(0), cosA(0), sinA(0) {};
+
+	void Init(const Eigen::Vector3f& p0, const Eigen::Vector3f& p1, int nSamples)
+	{
+		X0 = p0.x();
+		Y0 = p0.y();
+		double dX = p1.x() - X0;
+		double dY = p1.y() - Y0;
+
+		double len = sqrt(dX * dX + dY * dY);
+
+		cosA = dX / len;
+		sinA = dY / len;
+	}
+
+	void Point2Line(float X, float Y, float* offset, float* dist)
+	{
+		double dX = X - X0;
+		double dY = Y - Y0;
+
+		*offset =  cosA * dX + sinA * dY;
+		*dist   = -sinA * dX + cosA * dY;
 	}
 };
 

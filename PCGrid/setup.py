@@ -12,7 +12,6 @@ def get_pybind_extension():
     source_files = [
         "ext.cpp",
         "src/Las2PowerLine.cpp",
-        "src/LasFileIo.cpp",
         "src/PCGrid.cpp",
         "src/PointCloutFeature.cpp",
     ]
@@ -26,13 +25,11 @@ def get_pybind_extension():
         "/usr/local/include",
     ]
     
-    library_dirs = [
-        "/usr/local/lib",
-        "third_party/libLAS/build/bin/Release"
-    ]
+    # library_dirs = [
+    #     "/usr/local/lib",
+    #     "third_party/libLAS/build/bin/Release"
+    # ]
     
-    libraries = ["las"]
-
     extra_compile_args = [
         "-std=c++11",
         "-O3",
@@ -42,19 +39,19 @@ def get_pybind_extension():
         "-Wno-unused-variable",
     ]
 
-    extra_link_args = [
-        "-Wl,-rpath,$ORIGIN/../third_party/libLAS/build/bin/Release"
-    ]
+    # extra_link_args = [
+    #     "-Wl,-rpath,/home/jyxc/projects/PowerLineLidar_tmp/PCGrid/cmake_build/third_party/libLAS/bin/Release"
+    # ]
 
     ext_modules = [
         Extension(
             "pcgrid._C",
             sources=source_files,
             include_dirs=include_dirs,
-            library_dirs=library_dirs,
-            libraries=libraries,
+            # library_dirs=library_dirs,
+            # libraries=libraries,
             extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
+            # extra_link_args=extra_link_args,
             language="c++",
         ),
     ]
@@ -79,8 +76,6 @@ setup(
     packages=["pcgrid"],
     ext_modules=ext_modules,
     cmdclass=cmdclass,
-    zip_safe=False,
-    python_requires=">=3.7",
     install_requires=[
         "numpy>=1.18.0",
     ]

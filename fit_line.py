@@ -411,16 +411,16 @@ def main():
     # 加载电力线分段模块
     try:
         from pcgrid import SpanSegment
-    except ImportError:
-        print("错误: 无法导入pcgrid模块，请确保已正确安装")
+    except ImportError as e:
+        print(f"错误: {e}")
         return
     
     # 分段提取电力线
     print("\n正在分段提取电力线...")
-    seg_lines = SpanSegment.segment(
+    span_segment = SpanSegment()
+    seg_lines = span_segment.segment(
         args.line_path,
         args.tower_path,
-        args.save_path
     )
     print(f"成功提取 {len(seg_lines)} 段电力线")
     

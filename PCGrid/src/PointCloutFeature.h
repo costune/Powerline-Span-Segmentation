@@ -1,7 +1,7 @@
-#ifndef ORS_POINT_CLOUD_FEATURE_H
-#define ORS_POINT_CLOUD_FEATURE_H
+#ifndef _POINT_CLOUD_FEATURE_H_
+#define _POINT_CLOUD_FEATURE_H_
 
-#include "DenseCluster.h"
+#include "base.h"
 
 void ComputeCovarianceMatrix_2x2(const std::vector<cLasPOINT>& cPoints, const std::vector<int>& clusterPointIndices, Eigen::Vector3f& center, double QQ[4] );
 void ComputeCovarianceMatrix_3x3(const std::vector<cLasPOINT>& cPoints, const std::vector<int>& clusterPointIndices, Eigen::Vector3f& center, double QQ[9]);
