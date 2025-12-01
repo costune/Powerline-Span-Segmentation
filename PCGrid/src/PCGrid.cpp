@@ -659,8 +659,8 @@ void CheckTowersWithLinePoints( std::vector<cLasPOINT>& lineLasPoints, float gri
 		towerCenters = std::move(towerCentersInsideCorridor);
 		PrintTowerList(towerCenters);
 
-		std::string lasCenterInsideFile = outDir + "/InsideTowerCenters.las";
-		SaveCenters2LasFile(lasCenterInsideFile.c_str(), towerCenters);
+		// std::string lasCenterInsideFile = outDir + "/InsideTowerCenters.las";
+		// SaveCenters2LasFile(lasCenterInsideFile.c_str(), towerCenters);
 	}
 
 
