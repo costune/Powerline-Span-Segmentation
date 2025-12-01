@@ -18,9 +18,13 @@ find_package(Eigen3 REQUIRED)
 message(STATUS "Found Eigen3: ${EIGEN3_INCLUDE_DIR}")
 
 # 指定 Boost 路径（自定义安装目录）
-set(BOOST_ROOT "/usr/local")
-set(Boost_INCLUDE_DIR "/usr/local/include")
-set(Boost_LIBRARY_DIRS "/usr/local/lib")
+set(Boost_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost_1_65_0")
+set(Boost_LIBRARY_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost_1_65_0/stage/lib")
+
+# if installed
+# set(Boost_INCLUDE_DIR "/usr/local/include")
+# set(Boost_LIBRARY_DIRS "/usr/local/lib")
+
 set(Boost_NO_SYSTEM_PATHS ON)
 
 # Include directories

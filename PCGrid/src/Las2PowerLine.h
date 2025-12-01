@@ -1,3 +1,6 @@
+#ifndef LAS_TO_POWERLINE_H
+#define LAS_TO_POWERLINE_H
+
 #include <cstdio>
 #include <vector>
 #include <map>
@@ -5,7 +8,7 @@
 #include <algorithm>
 #include <queue>
 #include <cmath>
-#include <chrono>  // Include time header
+#include <chrono>
 #include <string>
 #include <iomanip>
 
@@ -23,3 +26,4 @@ void InitLineSegs(const std::vector<clusterCENTER>& towerCenters, std::vector<li
 
 int GroupPowerLinePoints(const std::vector<cLasPOINT>& lineLasPoints, const std::vector<clusterCENTER>& towerCenters, const std::vector<lineSEG> &lineSegs, std::vector<std::vector<int> >& groupedLinePts);
 
+#endif

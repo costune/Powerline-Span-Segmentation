@@ -1,5 +1,5 @@
-#ifndef _POINT_CLOUD_FEATURE_H_
-#define _POINT_CLOUD_FEATURE_H_
+#ifndef POINT_CLOUD_FEATURE_H
+#define POINT_CLOUD_FEATURE_H
 
 #include "base.h"
 
