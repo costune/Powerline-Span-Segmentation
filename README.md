@@ -6,14 +6,23 @@ A tool for extracting correct powerline span with input line and tower pointclou
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Features](#features)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
-- [Usage](#usage)new
-- [Configuration](#configuration)
+- [Usage](#usage)
 - [Examples](#examples)
-- [Requirements](#requirements)
-- [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
 
+## Introduction
+
+## Project Structure
+
+## Installation
+
+## Usage
+
+## Example
+
+## License
+
+## Contact
