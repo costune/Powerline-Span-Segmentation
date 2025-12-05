@@ -33,7 +33,13 @@ The algorithm support both `C++ binary file` and `Python binding with Pybind`. F
 
 ## Installation
 
-### 1. Using PCGrid in C++
+### 1. Clone
+
+```bash
+git clone https://github.com/costune/Powerline-Span-Segmentation.git --recursive
+```
+
+### 2. Using PCGrid in C++
 
 Due to using [libLAS](https://github.com/libLAS/libLAS) to read and write las file, and the repo is no longer maintained. The `libboost` in newer system may not compatible with libLAS. For adaptability, We use `Boost-1.65.0` locally. If you are on Unix system, you can download tar file from [Boost-1.65.0](https://www.boost.org/releases/1.65.0/), and extract the lib folder into `PCGrid/third_party`. 
 
@@ -61,7 +67,7 @@ The bin file is under `PCGrid/build/bin`.
 
 > If encounted libboost_system.so.1.65.0 not find, add lib path of Boost into env LD_LIBRARY_PATH.
 
-### 2. Using PCGrid in Python
+### 3. Using PCGrid in Python
 
 ```bash
 conda create -n pcgrid python=3.10
