@@ -70,9 +70,10 @@ The bin file is under `PCGrid/build/bin`.
 ### 3. Using PCGrid in Python
 
 ```bash
-conda create -n pcgrid python=3.10
-conda activate lidar
-pip install laspy numpy scipy scikit-learn shapefile pyproj PCGrid/
+conda create -n pcgrid python=3.8
+conda activate pcgrid
+pip install laspy numpy scipy scikit-learn pyshp pyproj tqdm pybind11
+pip install PCGrid/
 ```
 
 ## Usage
